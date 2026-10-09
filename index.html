@@ -332,6 +332,9 @@ function initLeaflet(){
  district=L.geoJSON({type:'FeatureCollection',features:KEDAH_DISTRICTS.map(d=>({type:'Feature',geometry:d.geometry,properties:{name:d.name}}))},{style:{color:'#24e2d1',weight:1.4,fill:false},interactive:false});
  return true;
 }
+// Titik tengah pilihan pengguna: persilangan tanda + merah pada peta rujukan.
+// Jangan gantikan titik ini dengan pusat geografi atau getBounds().getCenter().
+const KEDAH_USER_CENTER=[5.96,100.43];
 function fitKedahToFrame(){
  if(!leaflet||!district||el('leafletMap').hidden)return;
  const node=el('leafletMap');
@@ -339,11 +342,11 @@ function fitKedahToFrame(){
  leaflet.invalidateSize({pan:false,animate:false});
  const bounds=district.getBounds();
  if(!bounds||!bounds.isValid())return;
- // Always centre on Kedah's actual geographic extent, not the previous map centre.
- // Fit all districts into the currently visible desktop/mobile frame.
  const padding=Math.max(14,Math.min(28,Math.round(node.clientWidth*.035)));
- leaflet.fitBounds(bounds,{padding:[padding,padding],maxZoom:10,animate:false});
- leaflet.panTo(bounds.getCenter(),{animate:false});
+ // Kira zum yang memuatkan seluruh Kedah, tetapi gunakan titik + merah
+ // sebagai pusat paparan, bukan pusat automatik sempadan.
+ const zoom=leaflet.getBoundsZoom(bounds,false,L.point(padding*2,padding*2));
+ leaflet.setView(KEDAH_USER_CENTER,Math.min(10,zoom),{animate:false});
 }
 function refitKedahAfterLayout(){
  requestAnimationFrame(()=>requestAnimationFrame(()=>fitKedahToFrame()));
