@@ -323,17 +323,19 @@ function initLeaflet(){
 }
 function fitKedahToFrame(){
  if(!leaflet||!district||el('leafletMap').hidden)return;
- leaflet.invalidateSize({pan:false});
+ const node=el('leafletMap');
+ if(node.clientWidth<80||node.clientHeight<80)return;
+ leaflet.invalidateSize({pan:false,animate:false});
  const bounds=district.getBounds();
- if(bounds&&bounds.isValid())leaflet.fitBounds(bounds,{padding:[24,24],maxZoom:10,animate:false});
+ if(!bounds||!bounds.isValid())return;
+ // Always centre on Kedah's actual geographic extent, not the previous map centre.
+ // Fit all districts into the currently visible desktop/mobile frame.
+ const padding=Math.max(14,Math.min(28,Math.round(node.clientWidth*.035)));
+ leaflet.fitBounds(bounds,{padding:[padding,padding],maxZoom:10,animate:false});
+ leaflet.panTo(bounds.getCenter(),{animate:false});
 }
 function refitKedahAfterLayout(){
- // Leaflet must measure the VISIBLE map, after CSS desktop/mobile layout settles.
- requestAnimationFrame(()=>requestAnimationFrame(()=>{
-  fitKedahToFrame();
-  setTimeout(fitKedahToFrame,160);
-  setTimeout(fitKedahToFrame,450);
- }));
+ requestAnimationFrame(()=>requestAnimationFrame(()=>fitKedahToFrame()));
 }
 function refreshMarkers(){
  if(!leaflet)return;
@@ -372,6 +374,20 @@ function setView(view){
  try{localStorage.setItem('imaahad-v118-view',view)}catch(e){}
  refitKedahAfterLayout();
 }
+// Re-centre after responsive container width changes, including phone rotation.
+let lastMapWidth=0,lastMapHeight=0;
+if(typeof ResizeObserver!=='undefined'){
+ const mapResizeObserver=new ResizeObserver(entries=>{
+  const rect=entries[0].contentRect;
+  if(rect.width>80&&rect.height>80&&(Math.abs(rect.width-lastMapWidth)>1||Math.abs(rect.height-lastMapHeight)>1)){
+   lastMapWidth=rect.width;lastMapHeight=rect.height;
+   refitKedahAfterLayout();
+  }
+ });
+ mapResizeObserver.observe(el('leafletMap'));
+}
+window.addEventListener('orientationchange',refitKedahAfterLayout);
+window.addEventListener('resize',()=>{if(leaflet)refitKedahAfterLayout()});
 for(const v of ['desktop','mobile'])el(v+'Mode').addEventListener('click',()=>setView(v));
 let v=window.matchMedia('(max-width:700px)').matches?'mobile':'desktop';
 try{const saved=localStorage.getItem('imaahad-v118-view');if(['desktop','mobile'].includes(saved))v=saved}catch(e){}
