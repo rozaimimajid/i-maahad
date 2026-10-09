@@ -381,6 +381,17 @@ function refreshBoundaries(){if(!leaflet)return;
 // V1.16 update() remains authoritative for filters, cards, charts, directory and profiles.
 const originalUpdate=update;
 update=function(){originalUpdate();refreshMarkers()};
+// Existing V1.16 filter listeners captured the original update() function.
+// Refresh Leaflet AFTER those listeners update 'current', for every combination
+// of district, institution category, status, and text search.
+['district','category','status','search'].forEach(id=>{
+ el(id).addEventListener(id==='search'?'input':'change',()=>queueMicrotask(refreshMarkers));
+});
+// Reset and thematic chart selections also update the filtered records.
+el('reset').addEventListener('click',()=>queueMicrotask(refreshMarkers));
+['categories','districts','statuses','eras'].forEach(id=>{
+ el(id).addEventListener('click',()=>queueMicrotask(refreshMarkers));
+});
 mode.addEventListener('change',()=>{
  if(mode.value.startsWith('leaflet-'))showLeaflet(mode.value);
  else{el('leafletMap').hidden=true;el('leafletBoundaries').hidden=true;}
