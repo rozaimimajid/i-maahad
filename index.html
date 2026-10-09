@@ -89,7 +89,15 @@ body.dark-mode .offline-caption{background:#192d24;color:#c6d9cc}
 #leafletMap .leaflet-control-zoom{border:1px solid #d7e6dc;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px #0002}
 #leafletMap .leaflet-control-zoom a{width:36px;height:36px;line-height:36px;color:#175a42}
 #leafletMap .leaflet-control-layers{border:1px solid #d7e6dc;border-radius:9px;background:#fff;padding:6px}
-#leafletMap .leaflet-control-layers-toggle{width:32px;height:32px}
+#leafletMap .leaflet-control-layers-toggle{width:36px;height:36px}
+#leafletMap .leaflet-control-layers-expanded{padding:10px 12px;min-width:205px;max-width:calc(100vw - 32px);box-shadow:0 5px 18px #0003}
+#leafletMap .leaflet-control-layers-list{margin:0;padding:0}
+#leafletMap .leaflet-control-layers-base label{display:block!important;margin:0!important;padding:0!important;color:#173e31!important;font-size:13px!important;font-weight:500!important;cursor:pointer}
+#leafletMap .leaflet-control-layers-base label:hover{background:#eef6f0;border-radius:6px}
+#leafletMap .leaflet-control-layers-base label>span{display:flex!important;align-items:center!important;gap:9px!important;padding:9px 6px!important;line-height:1.35!important;white-space:normal!important}
+#leafletMap .leaflet-control-layers-base input[type=radio]{appearance:auto!important;position:static!important;display:inline-block!important;flex:0 0 auto!important;width:16px!important;height:16px!important;margin:0!important;padding:0!important;accent-color:#176d4c!important}
+#leafletMap .leaflet-control-layers-base label span span{display:inline!important;flex:1!important}
+#leafletMap .leaflet-control-layers-separator{margin:5px 0}
 .leaflet-boundaries{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:10px 14px;background:#fff}
 .leaflet-boundaries label{display:inline-flex;align-items:center;gap:6px;font-size:12px}
 .leaflet-boundaries button{width:auto}
@@ -312,9 +320,12 @@ function initLeaflet(){
  leaflet=L.map('leafletMap',{zoomSnap:0.25,preferCanvas:true}).setView([5.95,100.36],8.5);
  baseSatellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri',maxZoom:18,updateWhenIdle:true,keepBuffer:1});
  baseStreet=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri',maxZoom:18,updateWhenIdle:true,keepBuffer:1});
- baseOffline=L.geoJSON({type:'FeatureCollection',features:KEDAH_DISTRICTS.map(d=>({type:'Feature',geometry:d.geometry,properties:{name:d.name}}))},{style:{color:'#8fb6a1',weight:0.8,fillColor:'#e0ede2',fillOpacity:1},interactive:false});
+ leaflet.createPane('offlineBasePane');
+ leaflet.getPane('offlineBasePane').style.zIndex='250';
+ leaflet.getPane('offlineBasePane').style.pointerEvents='none';
+ baseOffline=L.geoJSON({type:'FeatureCollection',features:KEDAH_DISTRICTS.map(d=>({type:'Feature',geometry:d.geometry,properties:{name:d.name}}))},{pane:'offlineBasePane',style:{color:'#8fb6a1',weight:0.8,fillColor:'#e0ede2',fillOpacity:1},interactive:false});
  baseSatellite.addTo(leaflet);
- L.control.layers({'Imej Satelit Esri':baseSatellite,'Peta Jalan Esri':baseStreet,'Peta Kedah (luar talian)':baseOffline},null,{collapsed:true}).addTo(leaflet);
+ L.control.layers({'Imej Satelit Esri':baseSatellite,'Peta Jalan Esri':baseStreet,'Peta Kedah (luar talian)':baseOffline},null,{collapsed:true,position:'topright'}).addTo(leaflet);
  leaflet.on('baselayerchange',e=>{mode.value=e.layer===baseOffline?'offline':e.layer===baseStreet?'leaflet-street':'leaflet-imagery';});
  markers=L.layerGroup().addTo(leaflet);
  outline=L.geoJSON(MALAYSIA_OUTLINE,{style:{color:'#eaa12b',weight:2,fill:false},interactive:false});
